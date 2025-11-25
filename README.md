@@ -1,4 +1,38 @@
-# Análise do Padrão Bridge
+## 🌉 Padrão Estrutural Bridge
+
+O padrão **Bridge** separa a **abstração** (o que fazer) da **implementação** (como fazer), permitindo que ambas variem independentemente através de **composição**.
+
+### 🔧 **Hierarquia de IMPLEMENTAÇÃO** (Baixo Nível)
+
+Define como cada método de pagamento funciona (detalhes técnicos):
+
+- **`MetodoPagamento`** (ABC) - Interface abstrata que define quais métodos devem existir
+  - **`Cartao`** - Implementa autenticação e captura via cartão de crédito/débito
+  - **`Pix`** - Implementa autenticação (QR Code) e captura instantânea
+  - **`Boleto`** - Implementa geração de código de barras e compensação
+  - **`CarteiraDigital`** - Implementa biometria e transferência de saldo
+
+### 🎯 **Hierarquia de ABSTRAÇÃO** (Alto Nível)
+
+Define o que fazer (operações para o usuário) e delega os detalhes para a implementação:
+
+- **`ProcessadorPagamento`** - Processa pagamento simples, calcula taxas e delega autenticação/captura
+- **`ProcessadorPagamentoParcelado`** - Estende ProcessadorPagamento, adiciona funcionalidade de parcelamento
+
+### 🔗 **BRIDGE**
+
+A ponte é a **composição** que conecta as hierarquias:
+
+```python
+class ProcessadorPagamento:
+    def __init__(self, metodo: MetodoPagamento):
+        self.metodo = metodo  # ← PONTE! (composição)
+    
+    def processar(self, valor: float):
+        self.metodo.autenticar()           # ← DELEGA para implementação
+        self.metodo.capturar_pagamento()   # ← DELEGA para implementação
+```
+
 
 ## 📊 Comparação: Sem Bridge vs Com Bridge
 

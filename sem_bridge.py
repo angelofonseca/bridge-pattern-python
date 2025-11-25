@@ -19,7 +19,7 @@ class PagamentoSimplesComBoleto:
         print("Boleto: código de barras gerado")
         total = valor + (valor * 1.5 / 100)
         print(f"Total com taxa: R$ {total:.2f}")
-        print(f"Boleto: R$ {total:.2f} aguardando compensação (3 dias úteis)")
+        print(f"Boleto: R$ {total:.2f} aguardando compensação (2 dias úteis)")
 
 
 class PagamentoSimplesComCartaoDebito:
@@ -103,5 +103,3 @@ if __name__ == "__main__":
     print("\n=== Pagamento simples com Carteira Digital ===")
     simples_carteira = PagamentoSimplesComCarteiraDigital()
     simples_carteira.processar(150.0)
-
-
