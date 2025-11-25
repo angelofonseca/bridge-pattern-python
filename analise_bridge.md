@@ -2,16 +2,16 @@
 
 ## 📊 Comparação: Sem Bridge vs Com Bridge
 
-### Exemplo: Sistema de Controles de Jogos
+### Exemplo: Sistema de Processamento de Pagamentos
 
 | Aspecto | Sem Bridge | Com Bridge |
 |---------|-----------|-----------|
-| **Número de classes** | 3 controles × 2 plataformas = **6 classes** | 3 controles + 2 plataformas = **5 classes** |
-| **Adicionar plataforma** | +3 classes (uma para cada controle) | **+1 classe** |
-| **Adicionar controle** | +2 classes (uma para cada plataforma) | **+1 classe** |
+| **Número de classes** | 2 processadores × 5 métodos = **10 classes** | 2 processadores + 5 métodos = **7 classes** |
+| **Adicionar método de pagamento** | +2 classes (uma para cada processador) | **+1 classe** |
+| **Adicionar processador** | +5 classes (uma para cada método) | **+1 classe** |
 | **Duplicação de código** | ❌ Alta (lógica repetida em N×M lugares) | ✅ Mínima (lógica centralizada) |
-| **Acoplamento** | ❌ Alto (controle acoplado à plataforma) | ✅ Baixo (separação clara) |
-| **Flexibilidade** | ❌ Baixa (não pode trocar plataforma) | ✅ Alta (troca em runtime) |
+| **Acoplamento** | ❌ Alto (processador acoplado ao método) | ✅ Baixo (separação clara) |
+| **Flexibilidade** | ❌ Baixa (não pode trocar método) | ✅ Alta (troca em runtime) |
 | **Manutenção** | ❌ Difícil (mudança afeta N×M classes) | ✅ Fácil (mudança localizada) |
 
 ---
@@ -23,51 +23,54 @@
 Sem Bridge: N × M classes
 Com Bridge: N + M classes
 
-Exemplo atual: 3 controles × 2 plataformas
-Sem Bridge: 3 × 2 = 6 classes
-Com Bridge: 3 + 2 = 5 classes ✅
+Exemplo atual: 2 processadores × 5 métodos
+Sem Bridge: 2 × 5 = 10 classes
+Com Bridge: 2 + 5 = 7 classes ✅
 
-Exemplo expandido: 5 controles × 6 plataformas
-Sem Bridge: 5 × 6 = 30 classes 😱
-Com Bridge: 5 + 6 = 11 classes ✅
+Exemplo expandido: 4 processadores × 8 métodos
+Sem Bridge: 4 × 8 = 32 classes 😱
+Com Bridge: 4 + 8 = 12 classes ✅
 ```
 
 ### 2. **Desacoplamento (Separation of Concerns)**
-- Hierarquia de abstração (controles) evolui independentemente
-- Hierarquia de implementação (plataformas) evolui independentemente
+- Hierarquia de abstração (processadores) evolui independentemente
+- Hierarquia de implementação (métodos de pagamento) evolui independentemente
 - Mudanças em uma não afetam a outra
 
 ### 3. **Facilidade de Extensão (Open/Closed Principle)**
-- **Adicionar nova plataforma:** apenas 1 classe nova
-- **Adicionar novo controle:** apenas 1 classe nova
+- **Adicionar novo método de pagamento:** apenas 1 classe nova
+- **Adicionar novo processador:** apenas 1 classe nova
 - Crescimento **linear**, não exponencial
 
 ### 4. **Reutilização de Código (DRY - Don't Repeat Yourself)**
-- Lógica de alto nível está em um só lugar (Controle)
-- Implementação específica está em um só lugar (Plataforma)
+- Lógica de alto nível está em um só lugar (ProcessadorPagamento)
+- Implementação específica está em um só lugar (MetodoPagamento)
 - Sem duplicação
 
 ### 5. **Flexibilidade em Runtime**
 ```python
-jogador = ControleAvancado(pc)      # Começa no PC
-jogador.plataforma = playstation    # Troca para PlayStation
+processador = ProcessadorPagamento(cartao_credito)  # Começa com cartão
+processador.metodo = pix                             # Troca para Pix
 # Mesmo objeto, comportamento diferente!
 ```
 
 ### 6. **Single Responsibility Principle**
-- **Controle:** responsável pelas AÇÕES (pular, atirar, etc.)
-- **Plataforma:** responsável pelos INPUTS (teclas, botões, etc.)
+- **Processador:** responsável pela LÓGICA de processamento (calcular taxas, parcelar)
+- **Método de Pagamento:** responsável pela IMPLEMENTAÇÃO específica (autenticar, capturar)
 
 ### 7. **Facilita Testes**
 ```python
-# Pode criar plataforma mock para testes
-class PlataformaMock(Plataforma):
-    def input_pular(self):
-        return "MOCK_JUMP"
-    # ...
+# Pode criar método mock para testes
+class MetodoPagamentoMock(MetodoPagamento):
+    def autenticar(self):
+        return True
+    def capturar_pagamento(self, valor):
+        return True
+    def obter_taxa_transacao(self):
+        return 0.0
 
-controle = Controle(PlataformaMock())
-# Testar controle sem depender de plataforma real!
+processador = ProcessadorPagamento(MetodoPagamentoMock())
+# Testar processador sem depender de método real!
 ```
 
 ---
@@ -82,10 +85,10 @@ controle = Controle(PlataformaMock())
 **Exemplo onde Bridge é desnecessário:**
 ```python
 # Sistema com apenas 2 classes? Bridge é exagero!
-class ControlePC:
+class PagamentoCartao:
     pass
 
-class ControleMobile:
+class PagamentoPix:
     pass
 ```
 
@@ -99,9 +102,9 @@ class ControleMobile:
 - Pequeno impacto de performance (geralmente negligível)
 
 ```python
-controle.pular()  # Chama...
-  → self.plataforma.input_pular()  # Que retorna...
-    → "ESPAÇO"  # Usado pelo controle
+processador.processar(100.0)  # Chama...
+  → self.metodo.autenticar()  # Que executa...
+    → autenticação específica  # Do método
 # 2 chamadas em vez de 1 direta
 ```
 
@@ -112,12 +115,11 @@ controle.pular()  # Chama...
 **Exemplo de design ruim:**
 ```python
 # ❌ Abstração conhece detalhes da implementação
-class Controle:
-    def pular(self):
-        if isinstance(self.plataforma, PC):  # ❌ Acoplamento!
-            print("Pulo alto")
-        else:
-            print("Pulo normal")
+class ProcessadorPagamento:
+    def processar(self, valor):
+        if isinstance(self.metodo, CartaoCredito):  # ❌ Acoplamento!
+            print("Aplicando desconto especial")
+        # ...
 ```
 
 ### 5. **Pode Ser Difícil Entender em Código Legado**
@@ -131,19 +133,19 @@ class Controle:
 ### ✅ **USE quando:**
 
 1. Você tem ou prevê ter **múltiplas dimensões de variação**
-   - Exemplo: controles × plataformas, dispositivos × controles remotos
+   - Exemplo: processadores × métodos de pagamento, dispositivos × controles remotos
 
 2. Você quer **evitar explosão de classes**
    - Se N × M > N + M + overhead de gerenciamento
 
 3. Você precisa **trocar implementação em runtime**
-   - Exemplo: mudar de plataforma sem recriar objeto
+   - Exemplo: mudar de método de pagamento sem recriar objeto
 
 4. Você quer **evoluir hierarquias independentemente**
-   - Novos controles não afetam plataformas e vice-versa
+   - Novos processadores não afetam métodos e vice-versa
 
 5. Você quer **compartilhar implementação entre objetos**
-   - Múltiplos controles podem usar mesma plataforma
+   - Múltiplos processadores podem usar mesmo método
 
 ### ❌ **NÃO USE quando:**
 
@@ -195,7 +197,7 @@ class Controle:
 
 > "Use Bridge quando você tiver **duas dimensões ortogonais** que precisam variar independentemente, e o número de combinações está crescendo demais."
 
-**Exemplo clássico:**
-- Dimensão 1: Tipos de controle (Básico, Avançado, Acessível...)
-- Dimensão 2: Plataformas (PC, PS, Xbox, Switch...)
-- Bridge = Permite combinar qualquer controle com qualquer plataforma!
+**Exemplo do projeto:**
+- Dimensão 1: Tipos de processador (Simples, Parcelado, Recorrente...)
+- Dimensão 2: Métodos de pagamento (Cartão, Pix, Boleto, Débito, Carteira Digital...)
+- Bridge = Permite combinar qualquer processador com qualquer método!
